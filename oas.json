@@ -1,0 +1,1724 @@
+{
+    "openapi": "3.0.0",
+    "x-stoplight": {
+      "id": "0s1fx0ffj6b7g"
+    },
+    "info": {
+      "title": "Contiant API",
+      "version": "1.0",
+      "description": "Contiant payments and data API",
+      "contact": {
+        "name": "Contiant Ltd",
+        "url": "https://contiant.com",
+        "email": "contact@contiant.com"
+      },
+      "license": {
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT"
+      }
+    },
+    "servers": [
+      {
+        "url": "https://httpbin.org/anything",
+        "description": "Production environment"
+      }
+    ],
+    "paths": {
+      "/token": {
+        "post": {
+          "summary": "Generate Token",
+          "operationId": "generate-token",
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "access_token": {
+                        "type": "string"
+                      },
+                      "expires_in": {
+                        "type": "integer"
+                      },
+                      "token_type": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "access_token",
+                      "expires_in",
+                      "token_type"
+                    ]
+                  },
+                  "examples": {
+                    "Example": {
+                      "value": {
+                        "access_token": "eyJraWQiOiI1RFJSVDZEcGw5YnVaM3NISDQxQ2Y0b1BPM0RWUkE5VWh4NFFWUks0ZlwvWT0iLCJhbGciOiJSUzI1NiJ9",
+                        "expires_in": 3600,
+                        "token_type": "Bearer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "description": "Generates new token using client_id and client_secret (available for verified merchants in the Merchant Dashboard)",
+          "requestBody": {
+            "content": {
+              "application/x-www-form-urlencoded": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "client_id": {
+                      "type": "string"
+                    },
+                    "client_secret": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "client_id",
+                    "client_secret"
+                  ]
+                }
+              }
+            }
+          },
+          "tags": [
+            "Authentication"
+          ]
+        }
+      },
+      "/banks/{countryCode}": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "name": "countryCode",
+            "description": "Country code in ISO 3166-1 alpha-2 format",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "get": {
+          "summary": "Get Banks",
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "bankName": {
+                          "type": "string",
+                          "description": "Name of the bank"
+                        },
+                        "bankId": {
+                          "type": "string",
+                          "description": "Id of the bank that will be used for payments"
+                        }
+                      },
+                      "required": [
+                        "bankName",
+                        "bankId"
+                      ]
+                    }
+                  },
+                  "examples": {
+                    "Example": {
+                      "value": [
+                        {
+                          "bankName": "Deutsche Postbank Sandbox",
+                          "bankId": "postbank-sandbox"
+                        },
+                        {
+                          "bankName": "Revolut EU Sandbox",
+                          "bankId": "revolut_eu-sandbox"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "operationId": "get-banks",
+          "description": "Get available banks for specific country",
+          "tags": [
+            "Single Immediate Payments (PIS)"
+          ],
+          "security": [
+            {
+              "Token": []
+            }
+          ]
+        }
+      },
+      "/payments": {
+        "post": {
+          "summary": "Create Payment",
+          "operationId": "create-payment",
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "paymentUrl": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "status",
+                      "paymentUrl"
+                    ]
+                  },
+                  "examples": {
+                    "Example": {
+                      "value": {
+                        "id": "ff04170a-2590-49a8-9583-a3f758227107",
+                        "status": "success",
+                        "paymentUrl": "https://paywith.contiant.com/?paymentId=d94bfa45-b1e9-45dc-9dd8-06b55bee2f03"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "error": {
+                        "type": "string"
+                      },
+                      "errorMessages": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "error",
+                      "errorMessages"
+                    ]
+                  },
+                  "examples": {
+                    "Invalid value": {
+                      "value": {
+                        "error": "InvalidInput",
+                        "errorMessages": [
+                          "amountInMinorUnit is required"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized"
+            }
+          },
+          "description": "Create new payment session.\n\n  **For payments in `GBP`**\n\nMerchant's accountIdentifications must provide `SORT_CODE` and `ACCOUNT_NUMBER` instead of `IBAN` and `BIC`. Check the \"Payment in GBP\" from the Examples dropdown\n\n  **For payments in `NZD`**\n\nMerchant's accountIdentifications can be an empty array. Check the \"Payment in NZD\" from the Examples dropdown",
+          "security": [
+            {
+              "Token": []
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "amountInMinorUnit": {
+                      "type": "number",
+                      "description": "Monetary value in minor unit amount"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "description": "Currency code in ISO 4217 format"
+                    },
+                    "country": {
+                      "type": "string",
+                      "description": "Country code in ISO 3166-1 alpha-2 format. The consumer will only see banks available in the specified country"
+                    },
+                    "consumerId": {
+                      "type": "string",
+                      "description": "Uniquely identifies the consumer, we recommend that a v4 UUID is supplied"
+                    },
+                    "consumerFirstName": {
+                      "type": "string",
+                      "description": "First name of the consumer"
+                    },
+                    "consumerLastName": {
+                      "type": "string",
+                      "description": "Last name of the consumer"
+                    },
+                    "consumerEmail": {
+                      "type": "string",
+                      "description": "Email of the consumer"
+                    },
+                    "merchantName": {
+                      "type": "string",
+                      "description": "Name of the merchant"
+                    },
+                    "accountsDetails": {
+                      "type": "object",
+                      "required": [
+                        "merchant"
+                      ],
+                      "properties": {
+                        "merchant": {
+                          "type": "object",
+                          "description": "Merchant bank account details",
+                          "required": [
+                            "accountIdentifications",
+                            "address",
+                            "name"
+                          ],
+                          "properties": {
+                            "accountIdentifications": {
+                              "type": "array",
+                              "maxItems": 0,
+                              "nullable": true,
+                              "description": "The account details that identify the Merchant bank account. If IBAN is provided, BIC will be required.If ACCOUNT_NUMBER is provided, SORT_NUMBER will be required",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "IBAN",
+                                      "BIC",
+                                      "SORT_CODE",
+                                      "ACCOUNT_NUMBER"
+                                    ],
+                                    "description": "Used to describe the format of the account"
+                                  },
+                                  "identification": {
+                                    "type": "string",
+                                    "description": "The value associated with the account identification type"
+                                  }
+                                }
+                              },
+                              "default": []
+                            },
+                            "address": {
+                              "type": "object",
+                              "required": [
+                                "country",
+                                "postCode"
+                              ],
+                              "properties": {
+                                "country": {
+                                  "type": "string",
+                                  "description": "Country code in ISO 3166-1 alpha-2 format. The country code of the merchant's IBAN"
+                                },
+                                "postCode": {
+                                  "type": "string",
+                                  "description": "The post code of the merchant's address"
+                                }
+                              }
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Name of the bank account holder"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "bankId": {
+                      "type": "string",
+                      "description": "Bank id code, if provided the bank will be preselected on the payment form"
+                    },
+                    "merchantReferenceId": {
+                      "type": "string",
+                      "description": "Merchant reference of the payment"
+                    },
+                    "returnUrl": {
+                      "type": "string",
+                      "description": "URL where the consumer will be redirected after payment completion"
+                    },
+                    "failUrl": {
+                      "type": "string",
+                      "description": "URL where the consumer will be redirected in case of payment failure"
+                    },
+                    "vip": {
+                      "type": "string",
+                      "description": "Indicates if the consumer is VIP. Possible values: `YES`, `NO`"
+                    }
+                  },
+                  "required": [
+                    "amountInMinorUnit",
+                    "consumerFirstName",
+                    "consumerLastName",
+                    "consumerEmail",
+                    "currency",
+                    "country",
+                    "consumerId",
+                    "merchantName",
+                    "accountsDetails",
+                    "merchantReferenceId",
+                    "returnUrl"
+                  ]
+                },
+                "examples": {
+                  "Payment in NZD": {
+                    "value": {
+                      "amountInMinorUnit": 10,
+                      "currency": "NZD",
+                      "country": "NZ",
+                      "consumerId": "ff04170a-2590-49a8-9583-a3f758227107",
+                      "merchantName": "ACME Corporation",
+                      "accountsDetails": {
+                        "merchant": {
+                          "name": "ACME Corporation",
+                          "accountIdentifications": [],
+                          "address": {
+                            "country": "NZ",
+                            "postCode": "1000"
+                          }
+                        }
+                      },
+                      "merchantReferenceId": "b33d708b-1363-4384-b3d8-debdf6a63989",
+                      "returnUrl": "https://merchant.com/returnUrl"
+                    }
+                  },
+                  "Payment not in GBP": {
+                    "value": {
+                      "amountInMinorUnit": 10,
+                      "currency": "EUR",
+                      "country": "BG",
+                      "consumerId": "ff04170a-2590-49a8-9583-a3f758227107",
+                      "merchantName": "ACME Corporation",
+                      "accountsDetails": {
+                        "merchant": {
+                          "name": "ACME Corporation",
+                          "accountIdentifications": [
+                            {
+                              "type": "IBAN",
+                              "identification": "BG32TTBB94009168491123"
+                            },
+                            {
+                              "type": "BIC",
+                              "identification": "FINVBGSF"
+                            }
+                          ],
+                          "address": {
+                            "country": "BG",
+                            "postCode": "1000"
+                          }
+                        }
+                      },
+                      "merchantReferenceId": "b33d708b-1363-4384-b3d8-debdf6a63989",
+                      "bankId": "revolut_eu",
+                      "returnUrl": "https://merchant.com/returnUrl"
+                    }
+                  },
+                  "Payment in GBP": {
+                    "value": {
+                      "amountInMinorUnit": 10,
+                      "currency": "EUR",
+                      "country": "BG",
+                      "consumerId": "ff04170a-2590-49a8-9583-a3f758227107",
+                      "merchantName": "ACME Corporation",
+                      "accountsDetails": {
+                        "merchant": {
+                          "name": "ACME Corporation",
+                          "accountIdentifications": [
+                            {
+                              "type": "SORT_CODE",
+                              "identification": "123456"
+                            },
+                            {
+                              "type": "ACCOUNT_NUMBER",
+                              "identification": "12345678"
+                            }
+                          ],
+                          "address": {
+                            "country": "GB",
+                            "postCode": "SW1A 1AA"
+                          }
+                        }
+                      },
+                      "merchantReferenceId": "b33d708b-1363-4384-b3d8-debdf6a63989",
+                      "bankId": "revolut_eu",
+                      "returnUrl": "https://merchant.com/returnUrl"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "tags": [
+            "Single Immediate Payments (PIS)"
+          ]
+        }
+      },
+      "/payments/{id}": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID of the payment"
+          }
+        ],
+        "get": {
+          "summary": "Get Payment",
+          "description": "Get payment by ID",
+          "operationId": "get-payment",
+          "tags": [
+            "Single Immediate Payments (PIS)"
+          ],
+          "security": [
+            {
+              "Token": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "200",
+              "content": {
+                "application/json": {
+                  "examples": {
+                    "Example": {
+                      "value": "{\n  \"id\": \"2081b923-c8da-4128-8b80-4af86341e734\",\n  \"amountInMinorUnit\": \"1000\",\n  \"currency\": \"EUR\",\n  \"country\": \"DE\",\n  \"status\": \"SETTLED\",\n  \"consumerId\": \"123456789\",\n  \"consumerFirstName\": \"John\",\n  \"consumerLastName\": \"Doe\",\n  \"consumerEmail\": \"johndoe@example.com\",\n  \"merchantName\": \"ACME Ltd\",\n  \"accountsDetails\": {\n    \"merchant\": {\n      \"name\": \"ACME Ltd\",\n      \"accountIdentifications\": [\n        {\n          \"identification\": \"DE19510200003248345745\",\n          \"type\": \"IBAN\"\n        },\n        {\n          \"identification\": \"COBADEFFXXX\",\n          \"type\": \"BIC\"\n        }\n      ],\n      \"address\": {\n        \"country\": \"DE\",\n        \"postCode\": \"10115\"\n      }\n    },\n    \"consumer\": {\n      \"accountIdentifications\": [\n        {\n          \"identification\": \"DE46500202002153625337\",\n          \"type\": \"IBAN\"\n        }\n      ]\n    }\n  },\n  \"reference\": \"ABCD\",\n  \"merchantReferenceId\": \"5e75484c-9da5-42c9-8ccd-99247ce268ad\",\n  \"returnUrl\": \"https://returnurl.com\"\n}"
+                    }
+                  },
+                  "schema": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "amountInMinorUnit",
+                      "currency",
+                      "country",
+                      "status",
+                      "consumerId",
+                      "merchantName",
+                      "accountsDetails",
+                      "reference",
+                      "merchantReferenceId",
+                      "returnUrl"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "9a3fa926-67a2-45df-afcf-35832188ec21",
+                        "description": "ID of the payment"
+                      },
+                      "amountInMinorUnit": {
+                        "type": "integer",
+                        "example": 200,
+                        "description": "Monetary value in minor unit amount"
+                      },
+                      "currency": {
+                        "type": "string",
+                        "example": "EUR",
+                        "description": "Currency code in ISO 4217 format"
+                      },
+                      "country": {
+                        "type": "string",
+                        "example": "BG",
+                        "description": "Country code in ISO 3166-1 alpha-2 format"
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "COMPLETED",
+                        "description": "Status of the payment"
+                      },
+                      "consumerId": {
+                        "type": "string",
+                        "example": "1644b3a8-623e-4497-a20e-9184dcb8d37f",
+                        "description": "Uniquely identifies the consumer, we recommend that a v4 UUID is supplied"
+                      },
+                      "consumerFirstName": {
+                        "type": "string",
+                        "example": "John",
+                        "description": "First name of the consumer"
+                      },
+                      "consumerLastName": {
+                        "type": "string",
+                        "example": "Doe",
+                        "description": "Last name of the consumer"
+                      },
+                      "consumerEmail": {
+                        "type": "string",
+                        "example": "jd@example.com",
+                        "description": "Email of the consumer"
+                      },
+                      "merchantName": {
+                        "type": "string",
+                        "example": "Acme Corporation",
+                        "description": "Name of the merchant"
+                      },
+                      "accountsDetails": {
+                        "type": "object",
+                        "properties": {
+                          "merchant": {
+                            "type": "object",
+                            "description": "Merchant bank account details",
+                            "properties": {
+                              "name": {
+                                "type": "string",
+                                "example": "Acme Corporation"
+                              },
+                              "accountIdentifications": {
+                                "type": "array",
+                                "description": "The account details that identify the Merchant bank account. If IBAN is provided, BIC will be required.If ACCOUNT_NUMBER is provided, SORT_NUMBER will be required",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "example": "IBAN",
+                                      "description": "Used to describe the format of the account"
+                                    },
+                                    "identification": {
+                                      "type": "string",
+                                      "example": "BG58IORT80947118429754",
+                                      "description": "The value associated with the account identification type"
+                                    }
+                                  }
+                                }
+                              },
+                              "address": {
+                                "type": "object",
+                                "properties": {
+                                  "country": {
+                                    "type": "string",
+                                    "example": "BG",
+                                    "description": "Country code in ISO 3166-1 alpha-2 format"
+                                  },
+                                  "postCode": {
+                                    "type": "string",
+                                    "example": "1000",
+                                    "description": "The post code of the address"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "consumer": {
+                            "type": "object",
+                            "description": "Consumer bank account details, optional",
+                            "properties": {
+                              "accountIdentifications": {
+                                "type": "array",
+                                "description": "The account details that identify the Consumer bank account.",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "example": "IBAN",
+                                      "description": "Used to describe the format of the account"
+                                    },
+                                    "identification": {
+                                      "type": "string",
+                                      "example": "DE19510200003248345745",
+                                      "description": "The value associated with the account identification type"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "reference": {
+                        "type": "string",
+                        "example": "13e7ba01-4f95-42f1-b48b-ccdd42651864",
+                        "description": "Integrator reference of the payment"
+                      },
+                      "merchantReferenceId": {
+                        "type": "string",
+                        "example": "4963e2d2-5c7f-4516-9cde-3aae328cc2ee",
+                        "description": "Merchant reference of the payment"
+                      },
+                      "returnUrl": {
+                        "type": "string",
+                        "example": "https://merchant.com/returnUrl",
+                        "description": "URL where the consumer will be redirected after payment completion"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/data/banks/{countryCode}": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "name": "countryCode",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "get": {
+          "summary": "Get Banks",
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "bic": {
+                          "type": "string"
+                        },
+                        "transaction_total_days": {
+                          "type": "integer"
+                        },
+                        "countries": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "logo": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "bic",
+                        "transaction_total_days",
+                        "countries",
+                        "logo"
+                      ]
+                    }
+                  },
+                  "examples": {
+                    "Example": {
+                      "value": [
+                        {
+                          "id": "REVOLUT_REVOGB21",
+                          "name": "Revolut",
+                          "bic": "REVOGB21",
+                          "transaction_total_days": 730,
+                          "countries": [
+                            "BG",
+                            "GB",
+                            "NO",
+                            "SE"
+                          ],
+                          "logo": "https://blog.revolut.com/content/images/2020/03/Revolut_Brand-Update.png"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "operationId": "get-available-banks",
+          "description": "Get available banks",
+          "tags": [
+            "Data (AIS)"
+          ],
+          "security": [
+            {
+              "Token": []
+            }
+          ],
+          "parameters": [
+            {
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "in": "query",
+              "name": "referenceId",
+              "description": "Unique ID for request",
+              "required": true
+            }
+          ]
+        }
+      },
+      "/data/requisitions": {
+        "post": {
+          "summary": "Create Requisition",
+          "operationId": "create-requisition",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "consumer_id": {
+                      "type": "string"
+                    },
+                    "redirect": {
+                      "type": "string"
+                    },
+                    "institution_id": {
+                      "type": "string"
+                    },
+                    "user_language": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "consumer_id",
+                    "redirect",
+                    "institution_id",
+                    "user_language"
+                  ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "consumer_id": "ff04170a-2590-49a8-9583-a3f758227107",
+                      "redirect": "https://example.com/callback",
+                      "institution_id": "REVOLUT_REVOGB21",
+                      "user_language": "en"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  },
+                  "examples": {
+                    "Example": {
+                      "value": {
+                        "id": "aa6545c9-ff69-4e53-b24a-0308d4b3a1e0",
+                        "created": "2022-06-23T21:42:29.514Z",
+                        "redirect": "https://api.contiant.com/data/callback/success",
+                        "status": "CR",
+                        "institution_id": "REVOLUT_REVOGB21",
+                        "reference": "6855585f-b396-4a24-998e-9f1f5229d8d5",
+                        "user_language": "en",
+                        "link": "https://contiant.com/psd2/start/aa6545c9-ff69-4e53-b24a-0308d4b3a1e0/REVOLUT_REVOGB21",
+                        "account_selection": false,
+                        "redirect_immediate": false
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "tags": [
+            "Data (AIS)"
+          ],
+          "parameters": [
+            {
+              "schema": {
+                "type": "string"
+              },
+              "in": "query",
+              "name": "referenceId",
+              "required": true,
+              "description": "Unique ID for request"
+            }
+          ],
+          "security": [
+            {
+              "Token": []
+            }
+          ]
+        }
+      },
+      "/data/consumer/{consumerID}/{institutionID}": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "name": "consumerID",
+            "in": "path",
+            "required": true,
+            "description": "Id of the consumer, alphanumeric string up to 100 characters"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "name": "institutionID",
+            "in": "path",
+            "required": true,
+            "description": "Id of the institution"
+          }
+        ],
+        "get": {
+          "summary": "Get Accounts",
+          "tags": [
+            "Data (AIS)"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "created": {
+                        "type": "string"
+                      },
+                      "redirect": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "institution_id": {
+                        "type": "string"
+                      },
+                      "agreement": {
+                        "type": "string"
+                      },
+                      "reference": {
+                        "type": "string"
+                      },
+                      "accounts": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "user_language": {
+                        "type": "string"
+                      },
+                      "link": {
+                        "type": "string"
+                      },
+                      "account_selection": {
+                        "type": "boolean"
+                      },
+                      "redirect_immediate": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "created",
+                      "redirect",
+                      "status",
+                      "institution_id",
+                      "agreement",
+                      "reference",
+                      "accounts",
+                      "user_language",
+                      "link",
+                      "account_selection",
+                      "redirect_immediate"
+                    ]
+                  },
+                  "examples": {
+                    "Example": {
+                      "value": {
+                        "id": "6b0465f3-002d-4bf5-bce0-67106854daa5",
+                        "created": "2023-02-03T07:03:39.960302Z",
+                        "redirect": "https://api.contiant/data/api/success",
+                        "status": "LN",
+                        "institution_id": "REVOLUT_REVOGB21",
+                        "agreement": "5e33bd0e-f74b-4bd9-bb18-b2f61f37467b",
+                        "reference": "ffca66b2-1c66-4a6a-a7ab-197e68d19d2b",
+                        "accounts": [
+                          "9b75e017-2c36-465a-92d3-f96b63c23445",
+                          "185f1037-f981-45db-a3a4-7b7d230e4fd5"
+                        ],
+                        "user_language": "en",
+                        "link": "https://api.contiant.com/psd2/start/6b0465f3-002d-4bf5-bce0-67106854daa5/REVOLUT_REVOGB21",
+                        "account_selection": false,
+                        "redirect_immediate": false
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "operationId": "get-accounts",
+          "description": "Get list of all accounts for given consumer and bank institution",
+          "parameters": [
+            {
+              "schema": {
+                "type": "string"
+              },
+              "in": "query",
+              "name": "referenceId",
+              "required": true,
+              "description": "Unique ID for request"
+            }
+          ],
+          "security": [
+            {
+              "Token": []
+            }
+          ]
+        }
+      },
+      "/data/account/{accountID}/balances": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "name": "accountID",
+            "in": "path",
+            "required": true,
+            "description": "ID of the account"
+          }
+        ],
+        "get": {
+          "summary": "Get Balances",
+          "tags": [
+            "Data (AIS)"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "balances": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "balanceAmount": {
+                              "type": "object",
+                              "required": [
+                                "amount",
+                                "currency"
+                              ],
+                              "properties": {
+                                "amount": {
+                                  "type": "string"
+                                },
+                                "currency": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "balanceType": {
+                              "type": "string"
+                            },
+                            "referenceDate": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "balanceAmount",
+                            "balanceType",
+                            "referenceDate"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "balances"
+                    ]
+                  },
+                  "examples": {
+                    "Example": {
+                      "value": {
+                        "balances": [
+                          {
+                            "balanceAmount": {
+                              "amount": "50.00",
+                              "currency": "EUR"
+                            },
+                            "balanceType": "interimAvailable",
+                            "referenceDate": "2022-10-05T00:00:00.000+00:00"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "operationId": "get-balances",
+          "description": "Get balances for a given account",
+          "security": [
+            {
+              "Token": []
+            }
+          ],
+          "parameters": [
+            {
+              "schema": {
+                "type": "string"
+              },
+              "in": "query",
+              "name": "referenceId",
+              "description": "Unique ID for request",
+              "required": true
+            }
+          ]
+        }
+      },
+      "/data/account/{accountID}/transactions": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "name": "accountID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "get": {
+          "summary": "Get Transactions",
+          "tags": [
+            "Data (AIS)"
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "transactions": {
+                        "type": "object",
+                        "required": [
+                          "booked",
+                          "pending"
+                        ],
+                        "properties": {
+                          "booked": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "transactionId": {
+                                  "type": "string"
+                                },
+                                "bookingDate": {
+                                  "type": "string"
+                                },
+                                "valueDate": {
+                                  "type": "string"
+                                },
+                                "creditorName": {
+                                  "type": "string"
+                                },
+                                "transactionAmount": {
+                                  "type": "object",
+                                  "required": [
+                                    "amount",
+                                    "currency"
+                                  ],
+                                  "properties": {
+                                    "amount": {
+                                      "type": "string"
+                                    },
+                                    "currency": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "remittanceInformationUnstructuredArray": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "proprietaryBankTransactionCode": {
+                                  "type": "string"
+                                },
+                                "bookingDateTime": {
+                                  "type": "string"
+                                },
+                                "valueDateTime": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "transactionId",
+                                "bookingDate",
+                                "valueDate",
+                                "creditorName",
+                                "transactionAmount",
+                                "remittanceInformationUnstructuredArray",
+                                "proprietaryBankTransactionCode",
+                                "bookingDateTime",
+                                "valueDateTime"
+                              ]
+                            }
+                          },
+                          "pending": {
+                            "type": "array",
+                            "items": {
+                              "type": "object"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "required": [
+                      "transactions"
+                    ]
+                  },
+                  "examples": {
+                    "Example": {
+                      "value": {
+                        "transactions": {
+                          "booked": [
+                            {
+                              "transactionId": "52301aa3-5dad-4dfa-9b32-09788f04984f",
+                              "bookingDate": "2023-01-20",
+                              "valueDate": "2023-01-21",
+                              "creditorName": "ACME",
+                              "transactionAmount": {
+                                "amount": "50.00",
+                                "currency": "EUR"
+                              },
+                              "remittanceInformationUnstructuredArray": [
+                                "Refund from ACME"
+                              ],
+                              "proprietaryBankTransactionCode": "CARD_REFUND",
+                              "bookingDateTime": "2023-01-20T09:27:33.892807Z",
+                              "valueDateTime": "2023-01-21T12:11:32.531049Z"
+                            },
+                            {
+                              "transactionId": "14c90bfe-690f-4784-b287-fa21a03eceb7",
+                              "bookingDate": "2022-12-31",
+                              "valueDate": "2023-01-04",
+                              "creditorName": "ACME",
+                              "transactionAmount": {
+                                "amount": "-8.54",
+                                "currency": "EUR"
+                              },
+                              "remittanceInformationUnstructuredArray": [
+                                "Buying coffee"
+                              ],
+                              "proprietaryBankTransactionCode": "CARD_PAYMENT",
+                              "bookingDateTime": "2022-12-31T23:06:32.034014Z",
+                              "valueDateTime": "2023-01-04T02:42:22.622500Z"
+                            }
+                          ],
+                          "pending": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "operationId": "get-transactions-for-account",
+          "security": [
+            {
+              "Token": []
+            }
+          ],
+          "parameters": [
+            {
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "in": "query",
+              "name": "referenceId",
+              "description": "Unique ID for request",
+              "required": true
+            }
+          ],
+          "description": "Get transactions for the specified Account ID"
+        }
+      },
+      "/notifications/event-subscriptions": {
+        "post": {
+          "summary": "Create Event Subscription",
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "Unique ID for the event subscription"
+                        },
+                        "eventTypeId": {
+                          "type": "string",
+                          "description": "Type of the event subscription",
+                          "enum": [
+                            "payment.status"
+                          ]
+                        },
+                        "url": {
+                          "type": "string",
+                          "description": "URL where the notification will be sent"
+                        },
+                        "secret": {
+                          "type": "string",
+                          "description": "Autogenerated secret that you will need to validate notifications sent to the provided url. Note that the secret will be accessible only when the event subscription is created"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "description": "Datetime in RFC 3339 without timezone, always in UTC"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "description": "Datetime in RFC 3339 without timezone, always in UTC"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "eventTypeId",
+                        "url",
+                        "secret",
+                        "createdAt",
+                        "updatedAt"
+                      ]
+                    }
+                  },
+                  "examples": {
+                    "Example": {
+                      "value": {
+                        "id": "8748ecfb-fc83-4586-ae04-111be33a34f6",
+                        "eventTypeId": "payment.status",
+                        "url": "https://example.com",
+                        "secret": "secret",
+                        "createdAt": "2023-11-01T19:14:52.188226Z",
+                        "updatedAt": "2023-11-01T19:14:52.188226Z"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "operationId": "create-event-subscription",
+          "description": "Create Notification Event Subscription",
+          "tags": [
+            "Notifications"
+          ],
+          "security": [
+            {
+              "Token": []
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "eventTypeId": {
+                      "type": "string",
+                      "description": "Type of the event",
+                      "enum": [
+                        "payment.status"
+                      ]
+                    },
+                    "url": {
+                      "type": "string",
+                      "description": "URL where the notification for the specified event will be sent"
+                    }
+                  },
+                  "required": [
+                    "eventTypeId",
+                    "url"
+                  ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "eventTypeId": "payment.status",
+                      "url": "https://example.com"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "get": {
+          "summary": "Get Event Subscriptions",
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "description": "Unique ID for the event subscription"
+                        },
+                        "eventTypeId": {
+                          "type": "string",
+                          "description": "Type of the event subscription",
+                          "enum": [
+                            "payment.status"
+                          ]
+                        },
+                        "url": {
+                          "type": "string",
+                          "description": "URL where the notification will be sent"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "description": "Datetime in RFC 3339 without timezone, always in UTC"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "description": "Datetime in RFC 3339 without timezone, always in UTC"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "eventTypeId",
+                        "url",
+                        "createdAt",
+                        "updatedAt"
+                      ]
+                    }
+                  },
+                  "examples": {
+                    "Example": {
+                      "value": [
+                        {
+                          "id": "8748ecfb-fc83-4586-ae04-111be33a34f6",
+                          "eventTypeId": "payment.status",
+                          "url": "https://example.com",
+                          "createdAt": "2023-11-01T19:14:52.188226Z",
+                          "updatedAt": "2023-11-01T19:14:52.188226Z"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "operationId": "get-event-subscriptions",
+          "description": "Get Event Subscriptions",
+          "tags": [
+            "Notifications"
+          ],
+          "security": [
+            {
+              "Token": []
+            }
+          ]
+        }
+      },
+      "/notifications/event-subscriptions/{id}": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "name": "id",
+            "description": "Unique ID of the event subscription",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "get": {
+          "summary": "Get Event Subscription",
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique ID for the event subscription"
+                      },
+                      "eventTypeId": {
+                        "type": "string",
+                        "description": "Type of the event subscription",
+                        "enum": [
+                          "payment.status"
+                        ]
+                      },
+                      "url": {
+                        "type": "string",
+                        "description": "URL where the notification will be sent"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "description": "Datetime in RFC 3339 without timezone, always in UTC"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "description": "Datetime in RFC 3339 without timezone, always in UTC"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "EventTypeId",
+                      "url",
+                      "createdAt",
+                      "updatedAt"
+                    ]
+                  },
+                  "examples": {
+                    "Example": {
+                      "value": {
+                        "id": "8748ecfb-fc83-4586-ae04-111be33a34f6",
+                        "eventTypeId": "payment.status",
+                        "url": "https://example.com",
+                        "createdAt": "2023-11-01T19:14:52.188226Z",
+                        "updatedAt": "2023-11-01T19:14:52.188226Z"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "operationId": "get-event-subscription",
+          "description": "Get Event Subscription",
+          "tags": [
+            "Notifications"
+          ],
+          "security": [
+            {
+              "Token": []
+            }
+          ]
+        },
+        "patch": {
+          "summary": "Update Event Subscription",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "description": "URL where the notification for the specified event will be sent"
+                    }
+                  },
+                  "required": [
+                    "url"
+                  ]
+                },
+                "examples": {
+                  "Example": {
+                    "value": {
+                      "url": "https://notification.com"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique ID for the event subscription"
+                      },
+                      "eventTypeId": {
+                        "type": "string",
+                        "description": "Type of the event subscription",
+                        "enum": [
+                          "payment.status"
+                        ]
+                      },
+                      "url": {
+                        "type": "string",
+                        "description": "URL where the notification will be sent"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "description": "Datetime in RFC 3339 without timezone, always in UTC"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "description": "Datetime in RFC 3339 without timezone, always in UTC"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "EventTypeId",
+                      "url",
+                      "createdAt",
+                      "updatedAt"
+                    ]
+                  },
+                  "examples": {
+                    "Example": {
+                      "value": {
+                        "id": "8748ecfb-fc83-4586-ae04-111be33a34f6",
+                        "eventTypeId": "payment.status",
+                        "url": "https://notification.com",
+                        "createdAt": "2023-11-01T19:14:52.188226Z",
+                        "updatedAt": "2023-11-01T19:15:52.188226Z"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "operationId": "update-event-subscription",
+          "description": "Update Event Subscription",
+          "tags": [
+            "Notifications"
+          ],
+          "security": [
+            {
+              "Token": []
+            }
+          ]
+        },
+        "delete": {
+          "summary": "Delete Event Subscription",
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique ID for the event subscription"
+                      },
+                      "eventTypeId": {
+                        "type": "string",
+                        "description": "Type of the event subscription",
+                        "enum": [
+                          "payment.status"
+                        ]
+                      },
+                      "url": {
+                        "type": "string",
+                        "description": "URL where the notification will be sent"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "description": "Datetime in RFC 3339 without timezone, always in UTC"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "description": "Datetime in RFC 3339 without timezone, always in UTC"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "EventTypeId",
+                      "url",
+                      "createdAt",
+                      "updatedAt"
+                    ]
+                  },
+                  "examples": {
+                    "Example": {
+                      "value": {
+                        "id": "8748ecfb-fc83-4586-ae04-111be33a34f6",
+                        "eventTypeId": "payment.status",
+                        "url": "https://example.com",
+                        "createdAt": "2023-11-01T19:14:52.188226Z",
+                        "updatedAt": "2023-11-01T19:14:52.188226Z"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "operationId": "delete-event-subscription",
+          "description": "Delete Event Subscription",
+          "tags": [
+            "Notifications"
+          ],
+          "security": [
+            {
+              "Token": []
+            }
+          ]
+        }
+      }
+    },
+    "x-readme": {
+      "explorer-enabled": true,
+      "proxy-enabled": true,
+      "samples-enabled": true
+    }
+  }
